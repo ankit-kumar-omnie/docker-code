@@ -30,8 +30,8 @@ services:
         - action: rebuild
           path: ./package-lock.json
     volumes:
-      - ./src:/var/www/src                # ✅ Ensures src/main.ts exists immediately
-      - ./test:/var/www/test              # If you use test folder
+      - ./src:/var/www/src               
+      - ./test:/var/www/test              
       - ./tsconfig.json:/var/www/tsconfig.json
       - ./package.json:/var/www/package.json
       - ./package-lock.json:/var/www/package-lock.json
