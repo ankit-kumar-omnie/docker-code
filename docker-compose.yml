@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   app:
     container_name: nest-app
@@ -9,29 +11,8 @@ services:
     environment:
       - MONGODB_URL=mongodb://mongo:27017/new-libera
       - EVENTSTORE_URL=http://eventstore:2113
-    working_dir: /var/www
-    command: npm run start:dev
-    develop:
-      watch:
-        - action: sync
-          path: ./src
-          target: /var/www/src
-          ignore:
-            - node_modules/
-        - action: sync
-          path: ./test
-          target: /var/www/test
-        - action: sync
-          path: ./package.json
-          target: /var/www/package.json
-        - action: sync
-          path: ./tsconfig.json
-          target: /var/www/tsconfig.json
-        - action: rebuild
-          path: ./package-lock.json
     volumes:
-      - ./src:/var/www/src               
-      - ./test:/var/www/test              
+      - ./src:/var/www/src
       - ./tsconfig.json:/var/www/tsconfig.json
       - ./package.json:/var/www/package.json
       - ./package-lock.json:/var/www/package-lock.json
@@ -55,7 +36,7 @@ services:
       - EVENTSTORE_INSECURE=true
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
     ports:
-      - "3000:2113"
+      - "3001:2113"
       - "1113:1113"
     volumes:
       - eventstore-data:/var/lib/eventstore

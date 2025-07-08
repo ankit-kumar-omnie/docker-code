@@ -22,6 +22,7 @@ export class UserEventHandler extends BaseHandler {
   }
 
   private async handleUserCreated(event: AppEvent<UserCreatedPayload>) {
+    // console.log("=========",event)
     const aggregate = new UserAggregate(
       event.payload.id,
       this.eventStore,

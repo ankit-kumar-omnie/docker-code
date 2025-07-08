@@ -1,18 +1,21 @@
-# Use official Node.js base image
+# Use official Node.js image
 FROM node:20
 
 # Set working directory
 WORKDIR /var/www
 
-# Copy package files and install dependencies
+# Install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy environment file
-COPY .env .env
+# Install PM2 and ts-node globally
+RUN npm install -g pm2 ts-node typescript
+
+# Copy the entire project
+COPY . .
 
 # Expose app port
 EXPOSE 3000
 
-# Run in development mode
-CMD ["npm", "run", "start:dev"]
+# Start app in PM2 with watch mode
+CMD ["pm2-runtime", "ecosystem.config.js"]

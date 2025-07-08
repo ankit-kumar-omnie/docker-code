@@ -16,6 +16,12 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false,
+    "moduleResolution": "node",                    // ✅ Required by ts-node
+    "esModuleInterop": true,                       // ✅ Required by ts-node and NestJS
+    "resolveJsonModule": true,                     // ✅ If you're using JSON configs (e.g., Swagger)
+    "types": ["node"]                              // ✅ Helps with type resolution inside Docker
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }
