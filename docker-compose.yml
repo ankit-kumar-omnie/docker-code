@@ -5,21 +5,43 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "4000:3000"  # Expose NestJS on localhost:4000
+      - "4000:3000"
     environment:
-      - MONGODB_URL=mongodb://mongo:27017/new-libera      
+      - MONGODB_URL=mongodb://mongo:27017/new-libera
       - EVENTSTORE_URL=http://eventstore:2113
-    depends_on:
-      - mongo
-      - eventstore
+    working_dir: /var/www
     command: npm run start:dev
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /var/www/src
+          ignore:
+            - node_modules/
+        - action: sync
+          path: ./test
+          target: /var/www/test
+        - action: sync
+          path: ./package.json
+          target: /var/www/package.json
+        - action: sync
+          path: ./tsconfig.json
+          target: /var/www/tsconfig.json
+        - action: rebuild
+          path: ./package-lock.json
+    volumes:
+      - ./src:/var/www/src                # ✅ Ensures src/main.ts exists immediately
+      - ./test:/var/www/test              # If you use test folder
+      - ./tsconfig.json:/var/www/tsconfig.json
+      - ./package.json:/var/www/package.json
+      - ./package-lock.json:/var/www/package-lock.json
+      - /var/www/node_modules
 
   mongo:
     image: mongo:6
     container_name: mongo
     ports:
       - "12345:27017"
-      - "27017:27017"
     volumes:
       - mongo-data:/data/db
 
@@ -30,12 +52,11 @@ services:
       - EVENTSTORE_RUN_PROJECTIONS=All
       - EVENTSTORE_START_STANDARD_PROJECTIONS=true
       - EVENTSTORE_HTTP_PORT=2113
-      # - EVENTSTORE_TCP_PORT=1113
       - EVENTSTORE_INSECURE=true
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
     ports:
-      - "3000:2113"  # EventStore UI
-      - "1113:1113"  # TCP communication
+      - "3000:2113"
+      - "1113:1113"
     volumes:
       - eventstore-data:/var/lib/eventstore
 
