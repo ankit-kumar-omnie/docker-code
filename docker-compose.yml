@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "4000:3000"
+      - "4000:3000" # Expose app on http://localhost:4000
     environment:
       - MONGODB_URL=mongodb://mongo:27017/new-libera
       - EVENTSTORE_URL=http://eventstore:2113
@@ -17,12 +17,15 @@ services:
       - ./package.json:/var/www/package.json
       - ./package-lock.json:/var/www/package-lock.json
       - /var/www/node_modules
+    depends_on:
+      - mongo
+      - eventstore
 
   mongo:
     image: mongo:6
     container_name: mongo
     ports:
-      - "12345:27017"
+      - "12345:27017" # Expose MongoDB on http://localhost:12345
     volumes:
       - mongo-data:/data/db
 
@@ -36,8 +39,8 @@ services:
       - EVENTSTORE_INSECURE=true
       - EVENTSTORE_ENABLE_ATOM_PUB_OVER_HTTP=true
     ports:
-      - "3001:2113"
-      - "1113:1113"
+      - "2113:2113"  # Web UI and HTTP API at http://localhost:3001
+      - "1113:1113"  # TCP port for internal EventStore communication
     volumes:
       - eventstore-data:/var/lib/eventstore
 

@@ -5,11 +5,12 @@ import { UserController } from "./controller/user.controller";
 import { UserService } from "./service/user.service";
 import { EventStoreService } from "src/common/event-store.service";
 import { UserEventHandler } from "./handler/user.handler";
+import { UserAggregate } from "./aggregates/user.aggregate";
 
 @Module({
     imports: [MongooseModule.forFeature([{name:User.name,schema:UserSchema}])],
     controllers: [UserController],
-    providers: [UserService,EventStoreService,UserEventHandler], 
+    providers: [UserService,EventStoreService,UserEventHandler,UserAggregate], 
     exports: []
 })
 

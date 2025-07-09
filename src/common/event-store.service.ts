@@ -36,14 +36,47 @@ export class EventStoreService {
   }
 
   async getEvents(streamName: string): Promise<AppEvent[]> {
-    const url = `${this.eventStoreUrl}/streams/${streamName}/0/forward/100`;
+    const streamUrl = `${this.eventStoreUrl}/streams/${streamName}/0/forward/100`;
+
     try {
-      const res = await axios.get(url, {
+      const res = await axios.get(streamUrl, {
         headers: { Accept: 'application/json' },
         auth: this.credentials,
       });
 
-      return res.data.entries.reverse().map((entry: any) => entry.data);
+
+      const entries = res.data.entries || [];
+      const events: AppEvent[] = [];
+      for (const entry of entries.reverse()) {
+        const eventUrl = entry.links?.find(
+          (l: any) => l.relation === 'alternate',
+        )?.uri;
+
+        if (!eventUrl) {
+          console.warn(`⚠️ Missing alternate link for ${entry.title}`);
+          continue;
+        }
+
+        try {
+          const eventRes = await axios.get(eventUrl, {
+            headers: { Accept: 'application/json' },
+            auth: this.credentials,
+          });
+
+          const event = eventRes.data;
+          events.push({
+            eventName: event.eventName,
+            payload: event.payload,
+            createdAt: new Date(event.createdAt),
+          });
+        } catch (err) {
+          console.error(
+            `❌ Error fetching detail at ${eventUrl}:`,
+            err.message,
+          );
+        }
+      }
+      return events;
     } catch (err) {
       console.error(
         `❌ Error fetching events for ${streamName}:`,

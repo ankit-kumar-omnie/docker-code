@@ -8,7 +8,7 @@ import {
 } from '../events/user.created.event';
 import { EventStoreService } from '../../common/event-store.service';
 import { UserEventHandler } from '../handler/user.handler';
-import { UserAggregate } from '../aggregates/user.aggregate';
+import { UserAggregate, UserAggregateData } from '../aggregates/user.aggregate';
 
 @Injectable()
 export class UserService {
@@ -29,5 +29,13 @@ export class UserService {
     await aggregate.commit();
 
     return { message: 'UserCreatedEvent appended and handled', userId };
+  }
+
+  async getAggregate(id: string): Promise<UserAggregateData> {
+    const streamName = `user-${id}`;
+    const events = await this.eventStore.getEvents(streamName);
+    const aggregate = new UserAggregate(id, this.eventStore, this.userEventHandler);
+    aggregate.applyAll(events);
+    return aggregate.data;
   }
 }

@@ -16,7 +16,7 @@ export class UserAggregate extends BaseAggregate<UserAggregateData> {
   constructor(
     id: string,
     private readonly eventStore: EventStoreService,
-    private readonly eventHandler: BaseHandler
+    private readonly eventHandler: BaseHandler,
   ) {
     super(id, { id, username: '', password: '' });
   }
@@ -50,4 +50,3 @@ export class UserAggregate extends BaseAggregate<UserAggregateData> {
     this.uncommittedEvents = [];
   }
 }
-

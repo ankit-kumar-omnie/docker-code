@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { UserService } from "../service/user.service";
 import { UserDto } from "../dto/user.dto";
 
@@ -10,5 +10,10 @@ export class UserController{
     @Post('/create')
     async userCreation(@Body() dto:UserDto){
         return await this.userService.createUser(dto)
+    }
+
+    @Get(':id')
+    async getAggregate(@Param('id') id:string){
+        return await this.userService.getAggregate(id)
     }
 }
