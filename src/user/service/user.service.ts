@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { UserDto } from '../dto/user.dto';
 import { v4 as uuid } from 'uuid';
-import { AppEvent } from '../../common/base-handler';
-import {
-  UserCreatedEvent,
-  UserCreatedPayload,
-} from '../events/user.created.event';
 import { EventStoreService } from '../../common/event-store.service';
 import { UserEventHandler } from '../handler/user.handler';
 import { UserAggregate, UserAggregateData } from '../aggregates/user.aggregate';
