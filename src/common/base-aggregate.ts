@@ -2,12 +2,10 @@ import { AppEvent } from './base-handler';
 import { EventRegistry } from './event-registry';
 
 export abstract class BaseAggregate<TState> {
+  public static streamPrefix: string;
   public data: TState;
 
-  constructor(
-    public id: string,
-    initialState: TState,
-  ) {
+  constructor(public id: string, initialState: TState) {
     this.data = initialState;
   }
 

@@ -4,33 +4,25 @@ import { v4 as uuid } from 'uuid';
 import { EventStoreService } from '../../common/event-store.service';
 import { UserEventHandler } from '../handler/user.handler';
 import { UserAggregate, UserAggregateData } from '../aggregates/user.aggregate';
+import { UserUpdatedEvent } from '../events/user.updated.event';
+import { UserAggregateService } from './user.aggregate.service';
+import { AggregateService } from 'src/common/aggregate.service';
 
 @Injectable()
 export class UserService {
   constructor(
-    private readonly eventStore: EventStoreService,
-    private readonly userEventHandler: UserEventHandler,
+    private readonly aggregateService: AggregateService,
+    private readonly userAggregateService:UserAggregateService
   ) {}
 
   async createUser(dto: UserDto) {
-    const userId = uuid();
-    const aggregate = new UserAggregate(
-      userId,
-      this.eventStore,
-      this.userEventHandler,
-    );
-
-    aggregate.createUser(dto.username, dto.password);
+    const aggregate = this.userAggregateService.createAggregate(dto);
     await aggregate.commit();
-
-    return { message: 'UserCreatedEvent appended and handled', userId };
+    return { message: 'UserCreatedEvent appended and handled', userId: aggregate.id };
   }
 
   async getAggregate(id: string): Promise<UserAggregateData> {
-    const streamName = `user-${id}`;
-    const events = await this.eventStore.getEvents(streamName);
-    const aggregate = new UserAggregate(id, this.eventStore, this.userEventHandler);
-    aggregate.applyAll(events);
+    const aggregate = await this.aggregateService.load(UserAggregate, id);
     return aggregate.data;
   }
 }

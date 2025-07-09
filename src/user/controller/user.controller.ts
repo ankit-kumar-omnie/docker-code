@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { UserService } from "../service/user.service";
 import { UserDto } from "../dto/user.dto";
 
@@ -15,5 +15,10 @@ export class UserController{
     @Get(':id')
     async getAggregate(@Param('id') id:string){
         return await this.userService.getAggregate(id)
+    }
+
+    @Put(':id')
+    async updateUser(@Param('id') id:string,@Body() dto:UserDto){
+        // return await this.userService.updateUser(id,dto)
     }
 }

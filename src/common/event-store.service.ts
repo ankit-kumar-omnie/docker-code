@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { AppEvent } from './base-handler';
 import axios from 'axios';
+import { UserAggregate } from 'src/user/aggregates/user.aggregate';
+import { UserEventHandler } from 'src/user/handler/user.handler';
 
 @Injectable()
 export class EventStoreService {
   private readonly eventStoreUrl =
     process.env.EVENTSTORE_URL || 'http://localhost:3000';
+
   private readonly credentials = {
     username: 'admin',
     password: 'changeit',
@@ -44,9 +47,9 @@ export class EventStoreService {
         auth: this.credentials,
       });
 
-
       const entries = res.data.entries || [];
       const events: AppEvent[] = [];
+
       for (const entry of entries.reverse()) {
         const eventUrl = entry.links?.find(
           (l: any) => l.relation === 'alternate',
@@ -84,5 +87,20 @@ export class EventStoreService {
       );
       return [];
     }
+  }
+
+  /**
+   * Rebuild user aggregate state from event stream
+   */
+  async getUserSnapshot(
+    userId: string,
+  ): Promise<UserAggregate> {
+    const streamName = `user-${userId}`;
+    const events = await this.getEvents(streamName);
+
+    const aggregate = new UserAggregate(userId, this);
+    aggregate.applyAll(events);
+
+    return aggregate;
   }
 }
