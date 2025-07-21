@@ -11,6 +11,7 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { CreatePostDto } from '../dto/create.post.dto';
 import { DataSetsService } from 'src/datasets/service/datasets.service';
+import { RedundancyService } from './redundancy.service';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,7 @@ export class UserService {
     private readonly aggregateService: AggregateService,
     private readonly userAggregateService: UserAggregateService,
     private readonly dataSetsService: DataSetsService,
+    private readonly redundancyService: RedundancyService,
   ) {}
 
   async createUser(dto: UserDto) {
@@ -66,6 +68,14 @@ export class UserService {
         await this.dataSetsService.updateUserDataSet(
           'dataSet',
           Object.fromEntries(normalizedUserData),
+        );
+
+        await this.redundancyService.saveJsonBackup(
+          {
+            key: 'dataSet',
+            userDataSet: Object.fromEntries(normalizedUserData),
+          },
+          'dataSet.json',
         );
       }
 
@@ -143,6 +153,11 @@ export class UserService {
     await this.dataSetsService.updateUserDataSet(
       'dataSet',
       Object.fromEntries(normalizedUserData),
+    );
+
+    await this.redundancyService.saveJsonBackup(
+      { key: 'dataSet', userDataSet: Object.fromEntries(normalizedUserData) },
+      'dataSet.json',
     );
 
     return {

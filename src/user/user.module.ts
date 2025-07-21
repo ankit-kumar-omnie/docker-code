@@ -9,11 +9,12 @@ import { UserAggregate } from "./aggregates/user.aggregate";
 import { UserAggregateService } from "./service/user.aggregate.service";
 import { AggregateService } from "src/common/aggregate.service";
 import { DataSetsModule } from "src/datasets/dataset.module";
+import { RedundancyService } from "./service/redundancy.service";
 
 @Module({
     imports: [MongooseModule.forFeature([{name:User.name,schema:UserSchema}]),DataSetsModule],
     controllers: [UserController],
-    providers: [UserService,EventStoreService,UserEventHandler,UserAggregate,UserAggregateService,AggregateService], 
+    providers: [UserService,EventStoreService,UserEventHandler,UserAggregate,UserAggregateService,AggregateService,RedundancyService], 
     exports: []
 })
 
