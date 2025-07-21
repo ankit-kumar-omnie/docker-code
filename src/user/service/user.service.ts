@@ -46,56 +46,66 @@ export class UserService {
 
     let updated = false;
 
-    // Normalize existing userData keys
-    const normalizedUserData: Record<string, string[]> = {};
+    const normalizedUserData = new Map<string, string[]>();
     for (const key in userData) {
-      normalizedUserData[key.trim().toLowerCase()] = userData[key];
+      const normKey = key.trim().toLowerCase();
+      normalizedUserData.set(normKey, userData[key]);
     }
 
-    // STEP 1: If category is provided, we will store if not there.
+    // STEP 1: Manual override by user
     if (categoryName && categoryName.trim() !== '') {
-      const existingCategories = normalizedUserData[normalizedPlaceName] || [];
+      const existing = normalizedUserData.get(normalizedPlaceName) || [];
 
-      if (!existingCategories.includes(categoryName)) {
-        existingCategories.push(categoryName);
-        normalizedUserData[normalizedPlaceName] = existingCategories;
+      if (!existing.includes(categoryName)) {
+        existing.push(categoryName);
+        normalizedUserData.set(normalizedPlaceName, existing);
         updated = true;
       }
 
       if (updated) {
         await this.dataSetsService.updateUserDataSet(
           'dataSet',
-          normalizedUserData,
+          Object.fromEntries(normalizedUserData),
         );
       }
 
       return {
         id,
         placeName,
-        categories: normalizedUserData[normalizedPlaceName],
+        categories: normalizedUserData.get(normalizedPlaceName),
         source: 'user',
       };
     }
 
-    // STEP 2: We will try to find match cases existing with key starts
-    const matchingKeys = Object.keys(normalizedUserData).filter((key) =>
-      key.startsWith(normalizedPlaceName),
-    );
-    const matchingKey = matchingKeys.sort((a, b) => b.length - a.length)[0];
+    // STEP 2: Partial match
+    for (const [key, value] of normalizedUserData.entries()) {
+      if (normalizedPlaceName.includes(key)) {
+        return {
+          id,
+          placeName,
+          categories: value,
+          source: 'userDataSet_partial',
+        };
+      }
+    }
+
+    // STEP 2.1: Prefix-based match
+    const matchingKey = Array.from(normalizedUserData.keys())
+      .filter((key) => key.startsWith(normalizedPlaceName))
+      .sort((a, b) => b.length - a.length)[0];
 
     if (matchingKey) {
       return {
         id,
         placeName,
-        categories: normalizedUserData[matchingKey],
-        source: 'userDataSet',
+        categories: normalizedUserData.get(matchingKey),
+        source: 'userDataSet_prefix',
       };
     }
 
-    // STEP 3: If not found use AI keyword detection and will save in userData.
+    // STEP 3: AI detection using DuckDuckGo scraping
     const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(placeName)}`;
     const headers = { 'User-Agent': 'Mozilla/5.0' };
-
     const response = await axios.get(searchUrl, { headers });
     const $ = cheerio.load(response.data);
 
@@ -106,9 +116,8 @@ export class UserService {
     });
 
     const fullText = texts.join(' ').toLowerCase();
-    // console.log('[AI Input Text]', fullText);
-
     const keywordHitCount = new Map<string, number>();
+
     for (const [category, keywords] of Object.entries(apiData)) {
       for (const keyword of keywords) {
         const regex = new RegExp(`\\b${keyword}\\b`, 'g');
@@ -129,21 +138,18 @@ export class UserService {
     const finalCategories =
       matchedCategories.length > 0 ? matchedCategories : ['Others'];
 
-    // STEP 4: Save detection result
-    normalizedUserData[normalizedPlaceName] = finalCategories;
-    updated = true;
-
-    if (updated) {
-      await this.dataSetsService.updateUserDataSet(
-        'dataSet',
-        normalizedUserData,
-      );
-    }
+    // STEP 4: Save AI result to DB
+    normalizedUserData.set(normalizedPlaceName, finalCategories);
+    await this.dataSetsService.updateUserDataSet(
+      'dataSet',
+      Object.fromEntries(normalizedUserData),
+    );
 
     return {
       id,
       placeName,
-      categories: finalCategories
+      categories: finalCategories,
+      source: 'ai',
     };
   }
 }
